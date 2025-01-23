@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 
 import matplotlib
 import matplotlib.gridspec as gridspec
@@ -14,12 +13,9 @@ from matplotlib.colors import LinearSegmentedColormap, LogNorm
 from matplotlib.lines import Line2D
 from numpy.linalg import eig
 
-matplotlib.use('pgf')
-
-main_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(main_dir)
 import utility_functions as uf
 
+matplotlib.use('pgf')
 
 
 def get_label_pos(ax, fig, top=False):
