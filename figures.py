@@ -8,9 +8,8 @@ import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from animate.adapt import adapt
-from firedrake import *
-from firedrake.pyplot import *
-from matplotlib import lines
+from firedrake import dot, project, sqrt, norm, TensorFunctionSpace, Function, VectorFunctionSpace, FunctionSpace, RectangleMesh, CheckpointFile
+from firedrake.pyplot import tripcolor, tricontourf, triplot
 from matplotlib.colors import LinearSegmentedColormap, LogNorm
 from matplotlib.lines import Line2D
 from numpy.linalg import eig
@@ -20,8 +19,6 @@ matplotlib.use('pgf')
 main_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(main_dir)
 import utility_functions as uf
-from adaptor_fns import _tau_metric
-from options import Options
 
 
 
@@ -157,8 +154,6 @@ cmap_devonS = LinearSegmentedColormap.from_list('devonS', np.loadtxt("cmcrameri/
 cmap_devonS = LinearSegmentedColormap.from_list('devonS', np.loadtxt("cmcrameri/devonS.txt"))
 cmap_vik = LinearSegmentedColormap.from_list('vik', np.loadtxt("cmcrameri/vik.txt"))
 
-options = Options()
-
 def plot_metric_components(args):
     initial_steady_state_path = os.path.join(args.output_dir, "steady_state", "outputs-Ice1-id_steady_state.h5")
     with CheckpointFile(initial_steady_state_path, "r") as afile:
@@ -179,7 +174,7 @@ def plot_metric_components(args):
             "a_max": 1e30,
         }
     }
-    metric = _tau_metric(h, u, mp)
+    metric = uf.tau_metric(h, u, mp)
     metric.normalise()
     new_mesh = adapt(old_mesh, metric)
 
