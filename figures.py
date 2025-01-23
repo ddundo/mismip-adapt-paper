@@ -23,24 +23,7 @@ import utility_functions as uf
 from adaptor_fns import _tau_metric
 from options import Options
 
-fig_names = [
-    "metric_components",
-    "schemes",
-    "initial_steady_state",
-    "uniform_convergence",
-    "strat_comparison",
-    "strat_comparison_meshes",
-    "hessian_meshes",
-    "hessian_aspect_ratio",
-    "hessian_err",
-    "hessian_cpu_time",
-]
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--output-dir", type=str,)
-parser.add_argument("--fig", type=str, required=True, choices=fig_names)
-parser.add_argument("--format", type=str, default="pdf")
-args = parser.parse_args()
 
 def get_label_pos(ax, fig, top=False):
     # Get the aspect ratio of the axis
@@ -176,7 +159,7 @@ cmap_vik = LinearSegmentedColormap.from_list('vik', np.loadtxt("cmcrameri/vik.tx
 
 options = Options()
 
-if args.fig == "metric_components":
+def plot_metric_components(args):
     initial_steady_state_path = os.path.join(args.output_dir, "steady_state", "outputs-Ice1-id_steady_state.h5")
     with CheckpointFile(initial_steady_state_path, "r") as afile:
         old_mesh = afile.load_mesh("firedrake_default")
@@ -269,7 +252,9 @@ if args.fig == "metric_components":
                             )
         cbar.ax.xaxis.set_tick_params(pad=0, labelsize=6)
 
-elif args.fig == "schemes":
+    return fig
+
+def plot_schemes(args):
     plt.rcParams.update({"legend.markerscale": 0.7, "lines.markersize": 2,})
     fig, ax = plt.subplots(figsize=(3.27, 1.5))
 
@@ -356,7 +341,9 @@ elif args.fig == "schemes":
 
     ax.add_artist(legend1)
 
-elif args.fig == "initial_steady_state":
+    return fig
+
+def plot_initial_steady_state(args):
     initial_steady_state_path = os.path.join(args.output_dir, "steady_state", "outputs-Ice1-id_steady_state.h5")
     with CheckpointFile(initial_steady_state_path, "r") as afile:
         old_mesh = afile.load_mesh("firedrake_default")
@@ -418,7 +405,9 @@ elif args.fig == "initial_steady_state":
 
     fig.subplots_adjust(hspace=0.1)
 
-elif args.fig == "uniform_convergence":
+    return fig
+
+def plot_uniform_convergence(args):
     colors = cmap_lipari(np.linspace(0, 1, 6))
     Lx = 640e3
     Ly = 40e3
@@ -527,7 +516,9 @@ elif args.fig == "uniform_convergence":
 
     fig.subplots_adjust(wspace=0.15, hspace=0.2)
 
-elif args.fig == "strat_comparison":
+    return fig
+
+def plot_strat_comparison(args):
     # set marker size to 2
     plt.rcParams.update({"lines.markersize": 2})
     colors = cmap_oleron(np.linspace(0, 1, 14))
@@ -656,7 +647,9 @@ elif args.fig == "strat_comparison":
     pos.y1 -= 0.1
     axes[-1].set_position(pos)
 
-elif args.fig == "strat_comparison_meshes":
+    return fig
+
+def plot_strat_comparison_meshes(args):
     glob_tau_1600 = os.path.join(args.output_dir, "1600_tau_20_global", "outputs-Ice1-id_1600_tau_20_global.h5")
     hybr_tau_1600 = os.path.join(args.output_dir, "1600_tau_20_hybrid", "outputs-Ice1-id_1600_tau_20_hybrid.h5")
     fpaths = [glob_tau_1600, hybr_tau_1600]
@@ -713,7 +706,9 @@ elif args.fig == "strat_comparison_meshes":
     axes[-1].set_xlabel(r"$x\ (\mathrm{km})$", labelpad=-8)
     axes[-1].set_ylabel(r"$y\ (\mathrm{km})$", labelpad=-8)
 
-elif args.fig == "h_field_comparison":
+    return fig
+
+def plot_h_field_comparison(args):
     categorical_colors = cmap_devonS(np.linspace(0, 1, 11))
 
     # ref4_fpath = "/data3/glac_adapt/data/reference_outputs/ref_4/analysis/gls.npy"
@@ -848,7 +843,9 @@ elif args.fig == "h_field_comparison":
 
     fig.align_labels()
 
-elif args.fig == "hessian_meshes":
+    return fig
+
+def plot_hessian_meshes(args):
     ref4_fpath = os.path.join(args.output_dir, "uniform_250", "analysis", "gls.npy")
     ref4_gl_90 = np.load(ref4_fpath)[0, 89]
     ref4_gl_100 = np.load(ref4_fpath)[0, 99]
@@ -904,7 +901,9 @@ elif args.fig == "hessian_meshes":
         ncol=2,
     )
 
-elif args.fig == "hessian_aspect_ratio":
+    return fig
+
+def plot_hessian_aspect_ratio(args):
     from animate.quality import QualityMeasure
 
     c = 6400
@@ -958,7 +957,9 @@ elif args.fig == "hessian_aspect_ratio":
     cbar.ax.xaxis.set_tick_params(pad=0, labelsize=6)
     cbar.ax.set_title(r"Aspect ratio of adapted mesh elements of $\mathcal{H}_9$", pad=0.2)
 
-elif args.fig == "hessian_err":
+    return fig
+
+def plot_hessian_err(args):
     categorical_colors = cmap_devonS(np.linspace(0, 1, 11))
 
     cs = [800*2**i for i in range(5)]
@@ -1127,7 +1128,9 @@ elif args.fig == "hessian_err":
     cbar_pos.x1 -= 0.05
     cbar_ax.set_position(cbar_pos)
 
-elif args.fig == "hessian_cpu_time":
+    return fig
+
+def plot_hessian_cpu_time(args):
     cs = [800, 3200, 12800]
     fields = ["h", "u", "tau", "u-int-h",]
     labels = ["$h$", r"$\mathbf{u}$", r"$\tau_b$", r"$(h,\mathbf{u})$", "Uniform"]
@@ -1324,15 +1327,43 @@ elif args.fig == "hessian_cpu_time":
     # align labels
     fig.align_labels()
 
+    return fig
+
 ###############################################################
 
-# create figures dir if it does not exist
-if not os.path.exists(os.path.join(args.output_dir, "figures")):
-    os.makedirs(os.path.join(args.output_dir, "figures"))
+def main():
+    fig_fun_map = {
+        "metric_components": plot_metric_components,
+        "schemes": plot_schemes,
+        "initial_steady_state": plot_initial_steady_state,
+        "uniform_convergence": plot_uniform_convergence,
+        "strat_comparison": plot_strat_comparison,
+        "strat_comparison_meshes": plot_strat_comparison_meshes,
+        "hessian_meshes": plot_hessian_meshes,
+        "hessian_aspect_ratio": plot_hessian_aspect_ratio,
+        "hessian_err": plot_hessian_err,
+        "hessian_cpu_time": plot_hessian_cpu_time,
+    }
+    fig_names = list(fig_fun_map.keys())
 
-fig_idx = fig_names.index(args.fig) + 1
-fname = f"fig{fig_idx}.{args.format}"
-fig.savefig(os.path.join(args.output_dir, "figures", fname),
-            # backend="pgf",
-            dpi=300, bbox_inches='tight', pad_inches=0.01, transparent=True)
-print(f"Saved {fname}.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output-dir", type=str,)
+    parser.add_argument("--fig", type=str, required=True, choices=fig_names)
+    parser.add_argument("--format", type=str, default="pdf")
+    args = parser.parse_args()
+
+    fig = fig_fun_map[args.fig](args)
+
+    # create figures dir if it does not exist
+    if not os.path.exists(os.path.join(args.output_dir, "figures")):
+        os.makedirs(os.path.join(args.output_dir, "figures"))
+
+    fig_idx = fig_names.index(args.fig) + 1
+    fname = f"fig{fig_idx}.{args.format}"
+    fig.savefig(os.path.join(args.output_dir, "figures", fname),
+                # backend="pgf",
+                dpi=300, bbox_inches='tight', pad_inches=0.01, transparent=True)
+    print(f"Saved {fname}.")
+
+if __name__ == "__main__":
+    main()
