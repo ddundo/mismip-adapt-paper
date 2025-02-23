@@ -10,7 +10,7 @@ get_steady_state:
 		--simulation-id steady-state \
 		--output-dir $(OUTPUTS_DIR)
 
-RESOLUTIONS = 4000 2000 1000 500 250
+RESOLUTIONS = 4000 2000 1000 500 250 125
 uniform_resolution: $(foreach R,$(RESOLUTIONS),uniform_resolution_$(R))
 
 define RUN_UNIFORM_RESOLUTION
@@ -49,9 +49,11 @@ analyse:
 	python3 $(ANALYSIS_SCRIPT) $(OUTPUTS_DIR) 0 1
 
 # requirement for figures: https://github.com/callumrollo/cmcrameri
-FIGURES = metric_components schemes initial_steady_state uniform_convergence \
-          strat_comparison strat_comparison_meshes hessian_meshes \
-          hessian_aspect_ratio hessian_err hessian_cpu_time
+FIGURES = initial_steady_state uniform_convergence metric_components \
+		  metric_intersection strat_comparison_meshes strat_comparison_conv \
+		  strat_comparison_dofs hessian_meshes hessian_aspect_ratio \
+		  hessian_err_spatial hessian_err_avg hessian_cpu_time_error \
+		  hessian_cpu_time_contribution
 
 make_figures:
 	@for fig in $(FIGURES); do \

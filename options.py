@@ -35,11 +35,11 @@ def Options(**kwargs):
         "metric_parameters": {
             "dm_plex_metric": {
                 "target_complexity": kwargs.get("target_complexity", 800),
-                "h_min": 1.0,
-                "h_max": 50e3,
-                "p": kwargs.get("dm_plex_metric_p", 2.0),
-                "a_max": 1e30,
-                "hausdorff_number": 1e3,  # doesn't matter since it's a rectangular domain
+                # "h_min": 1.0,
+                # "h_max": 50e3,
+                # "p": kwargs.get("dm_plex_metric_p", 2.0),
+                # "a_max": 1e30,
+                # "hausdorff_number": 1e3,  # doesn't matter since it's a rectangular domain
             }
         } 
     }
