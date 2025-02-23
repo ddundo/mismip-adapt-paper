@@ -362,55 +362,6 @@ def global_adaptor(mesh_seq, solutions):
     return True
 
 @PETSc.Log.EventDecorator()
-def global_adaptor_utau(mesh_seq, solutions):
-    mesh_seq.converged[:] = False
-    metrics_tau, metrics_u = [], []
-
-    for ii, f in enumerate(["tau", "u"]):
-        metrics = metrics_tau if f == "tau" else metrics_u
-        for i in range(len(mesh_seq)):
-            h_sols = solutions["h"]["forward"][i]
-            u_sols = solutions["u"]["forward"][i]
-            subinterval_metrics = []
-
-            for j in range(len(h_sols)):
-                h = h_sols[j]
-                u = u_sols[j]
-
-                metric_fn = get_metric_fn(f)
-                _metric = metric_fn(h, u, mp)
-
-                _metric.enforce_spd(restrict_sizes=False, restrict_anisotropy=False)
-                subinterval_metrics.append(_metric)
-
-            combined_metric = subinterval_metrics[0].copy(deepcopy=True)
-            for m in subinterval_metrics[1:]:
-                combined_metric.intersect(m)
-
-            metrics.append(combined_metric)
-
-        space_time_normalise(metrics, mesh_seq.time_partition, mp)
-
-    metrics = []
-    for m1, m2 in zip(metrics_tau, metrics_u):
-        intersected_m = m1.copy(deepcopy=True).intersect(m2)
-        metrics.append(intersected_m)
-
-    prev_iter = int(mesh_seq[0].name.split("mesh_iter_")[1].split("_")[0])
-    for i, metric in enumerate(metrics):
-        mesh_seq[i] = adapt(
-            mesh_seq[i], metric, name=f"mesh_iter_{prev_iter+1}_int_{i}"
-        )
-
-    if not args.no_chk:
-        print(f"Checkpointing adapted meshes {prev_iter+1} and solutions {prev_iter}.")
-        uf.checkpoint_meshseq(mesh_seq, save_sols=True,
-                            save_inds=False,
-                            iteration=prev_iter, metrics=metrics)
-
-    return True
-
-@PETSc.Log.EventDecorator()
 def classical_adaptor(mesh_seq, i):
     Q = mesh_seq.function_spaces["h"][i]
     V = mesh_seq.function_spaces["u"][i]
@@ -430,30 +381,6 @@ def classical_adaptor(mesh_seq, i):
 
     prev_iter = int(mesh_seq[i].name.split("mesh_iter_")[1].split("_")[0])
     mesh_seq[i] = adapt(mesh_seq[i], metric, name=f"mesh_iter_{prev_iter+1}_int_{i}")
-
-@PETSc.Log.EventDecorator()
-def classical_adaptor_utau(mesh_seq, i):
-    Q = mesh_seq.function_spaces["h"][i]
-    V = mesh_seq.function_spaces["u"][i]
-
-    if i == 0:
-        ic = mesh_seq.initial_condition
-        h = ic["h"]
-        u = ic["u"]
-    else:
-        solutions = mesh_seq.solutions.extract()
-        h = mesh_seq._transfer(solutions["h"]["forward"][i-1][-1], Q)
-        u = mesh_seq._transfer(solutions["u"]["forward"][i-1][-1], V)
-
-    u_metric = get_metric_fn("u")(h, u, mp)
-    tau_metric = get_metric_fn("tau")(h, u, mp)
-    u_metric.normalise()
-    tau_metric.normalise()
-    metric = u_metric.copy(deepcopy=True).intersect(tau_metric)
-
-    prev_iter = int(mesh_seq[i].name.split("mesh_iter_")[1].split("_")[0])
-    mesh_seq[i] = adapt(mesh_seq[i], metric, name=f"mesh_iter_{prev_iter+1}_int_{i}")
-
 
 mesh_seq = MeshSeq(
     time_partition,
@@ -486,9 +413,6 @@ if steady_state_simulation or uniform_simulation:
         mesh_seq.output_fpath = output_fpath
         uf.checkpoint_meshseq(mesh_seq, True)
     exit()
-
-classical_adaptor = classical_adaptor_utau if adapt_field == "u-int-tau" else classical_adaptor
-global_adaptor = global_adaptor_utau if adapt_field == "u-int-tau" else global_adaptor
 
 t0 = time.time()
 if args.hybrid:
