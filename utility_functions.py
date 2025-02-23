@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+from numpy.linalg import eig
 from animate.metric import RiemannianMetric
 from firedrake import *
 from firedrake.__future__ import interpolate
@@ -508,3 +509,20 @@ def get_adapted(fpath, iterations="best", years=None):
             us.append(_us)
 
     return (hs, us) if len(hs) > 1 else (hs[0], us[0])
+
+def get_metric_density_quotients(metric):
+    evalues = []
+    evectors = []
+    for hess in metric.dat.data:
+        eigvals, eigvecs = eig(hess)
+        evalues.append(eigvals)
+        evectors.append(eigvecs)
+    evalues = np.array(evalues)
+    evectors = np.array(evectors)
+
+    quotients_x = Function(FunctionSpace(metric.function_space().mesh(), "CG", 1))
+    density = quotients_x.copy(deepcopy=True)
+    quotients_x.dat.data[:] = np.sqrt(evalues[:, 1] / evalues[:, 0])
+    density.dat.data[:] = np.sqrt(evalues[:, 0] * evalues[:, 1])
+
+    return density, quotients_x
